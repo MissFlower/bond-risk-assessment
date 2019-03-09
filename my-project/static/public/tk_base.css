@@ -1,0 +1,202 @@
+/* 
+    *Creat By DoveyLovey丶Cora On 2019/03/05*
+ */
+@charset "UTF-8";
+/*css 初始化 */
+html,
+body,
+ul,
+li,
+ol,
+dl,
+dd,
+dt,
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+form,
+fieldset,
+legend,
+img {
+	margin: 0;
+	padding: 0;
+}
+fieldset,
+img,
+input,
+button {
+	border: none;
+	padding: 0;
+	margin: 0;
+	outline-style: none;
+} /*去掉input等聚焦时的蓝色边框*/
+ul,
+ol {
+	list-style: none;
+}
+input {
+	padding-top: 0;
+	padding-bottom: 0;
+	font-family: "SimSun", "宋体";
+}
+select,
+input {
+	vertical-align: middle;
+}
+select,
+input,
+textarea {
+	font-size: 12px;
+	margin: 0;
+}
+textarea {
+	resize: none;
+} /*防止拖动*/
+img {
+	border: 0;
+	vertical-align: middle;
+	width: 100%;
+	height: 100%;
+} /*  去掉图片低测默认的3像素空白缝隙，或者用display：block也可以*/
+table {
+	border-collapse: collapse;
+}
+body {
+	font: 12px/150% Arial, Verdana, "\5b8b\4f53";
+	color: #666;
+	background: #fff;
+}
+.clearfix:before,
+.clearfix:after {
+	/*清楚浮动*/
+	content: "";
+	display: table;
+}
+.clearfix:after {
+	clear: both;
+}
+.clearfix {
+	*zoom: 1; /*IE/7/6*/
+}
+a {
+	color: #666;
+	text-decoration: none;
+}
+a:hover {
+	color: #c81623;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	text-decoration: none;
+	font-weight: normal;
+	font-size: 100%;
+} /*设置h标签的大小，设置跟父亲一样大的字体font-size:100%;*/
+s,
+i,
+em {
+	font-style: normal;
+	text-decoration: none;
+}
+.col-red {
+	color: #c81623 !important;
+}
+
+/*公共类*/
+.w {
+	/*版心 提取 */
+	width: 100%;
+	margin: 0 auto;
+}
+.fl {
+	float: left;
+}
+.fr {
+	float: right;
+}
+.tl {
+	text-align: left;
+}
+.tc {
+	text-align: center;
+}
+.tr {
+	text-align: right;
+}
+.show {
+    display: block;
+}
+.hide {
+	display: none;
+}
+.fs12 {
+	font-size: 12px;
+}
+.fs13 {
+	font-size: 13px;
+}
+.fs14 {
+	font-size: 14px;
+}
+.fs15 {
+	font-size: 15px;
+}
+.fs16 {
+	font-size: 16px;
+}
+.fs17 {
+	font-size: 17px;
+}
+.fs18 {
+	font-size: 18px;
+}
+.fs19 {
+	font-size: 19px;
+}
+.fs20 {
+	font-size: 20px;
+}
+/* 使用图片作为a标签的点击按钮时，当触发touchstart的时候，往往会有一个灰色的背景 */
+a,
+a:hover,
+a:active,
+a:visited,
+a:link,
+a:focus {
+	-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+	-webkit-tap-highlight-color: transparent;
+	outline: none;
+	background: none;
+	text-decoration: none;
+}
+/* 禁止文字被选中 */
+body {
+	-moz-user-select: -moz-none;
+	-moz-user-select: none;
+	-o-user-select: none;
+	-khtml-user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+/* 单行文本溢出 */
+.ellipsis {
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
+/* 多行文本溢出 */
+.mult_ellipsis {
+	overflow: hidden;
+	text-overflow: ellipsis; /*文本溢出显示省略号 */
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+}

@@ -46,11 +46,7 @@
                     </li>
                     <li class="clearfix">
                         <p class="fl tk-risk-type-name tk-risk-type-second fs14 tr">发行价格</p>
-                        <span class="fl tk-risk-type-val fs14">0</span>
-                    </li>
-                    <li class="clearfix">
-                        <p class="fl tk-risk-type-name tk-risk-type-second fs14 tr">付息频率</p>
-                        <span class="fl tk-risk-type-val fs14">{{baseInfo.interestFrequency}}</span>
+                        <span class="fl tk-risk-type-val fs14">{{baseInfo.par}}</span>
                     </li>
                     <li class="clearfix">
                         <p class="fl tk-risk-type-name tk-risk-type-second fs14 tr">计息方式</p>
@@ -78,11 +74,11 @@
                     </li>
                     <li class="clearfix">
                         <p class="fl tk-risk-type-name tk-risk-type-second fs14 tr">多因子</p>
-                        <span class="fl tk-risk-type-val fs14">{{baseInfo.kmvModelRisk}}</span>
+                        <span class="fl tk-risk-type-val fs14">{{baseInfo.kmvModelRisk}}%</span>
                     </li>
                     <li class="clearfix">
                         <p class="fl tk-risk-type-name tk-risk-type-second fs14 tr">动态违约率</p>
-                        <span class="fl tk-risk-type-val fs14">{{baseInfo.mfModeRisk}}</span>
+                        <span class="fl tk-risk-type-val fs14">{{baseInfo.mfModeRisk}}%</span>
                     </li>
                 </ul>
             </div>
@@ -106,11 +102,11 @@ export default {
     name: 'riskBaseInfo',
     data() {
         return{
-            baseInfo: '',
-            kmvData: [],
-            kmvDate: [],
-            mfData: [],
-            mfDate: [],
+            baseInfo: '', // 基本信息
+            kmvData: [], //动态数据
+            kmvDate: [], //动态日期
+            mfData: [], //多因子数据
+            mfDate: [], //多因子日期
         }
     },
     components: {
@@ -120,11 +116,17 @@ export default {
         
     },
     activated() {
-        console.log(this.$route.query)
+        // console.log(this.$route.query)
         const name = this.$route.query.name;
         const kmv = this.$route.query.kmv;
         const mf = this.$route.query.mf;
         const grade = this.$route.query.grade;
+        // 页面进来重置数据
+        this.baseInfo = '';
+        this.kmvData = [];
+        this.kmvDate = [];
+        this.mfData = [];
+        this.mfDate = [];
         this.getData(name, kmv, mf, grade);
     },
     methods: {
@@ -143,47 +145,48 @@ export default {
             });
             let data = {
                 secName: secName, // 债券名称
-                kmvModelRisk: kmvModelRisk, // 多因子风险值
-                mfModeRisk: mfModeRisk, // 动态风险值
+                kmvModelRisk: kmvModelRisk, // 动态风险值
+                mfModeRisk: mfModeRisk, // 多因子风险值
                 rateFormer: grade // 评级
             }
             this.$post('cbond_model/cbonds/queryCbondInfo', data)
                 .then((response) => {
-                    this.$Message.destroy(); 
-                    console.log(response)
-                    const flag = response.data.status;
-                    console.log(flag)
-                    if (flag == '0') {
-                        this.baseInfo = response.data.data;
-                        const kmv = response.data.data.kmvModelHistoryList;
-                        const mf = response.data.data.mfModelHistoryList;
-                        if (kmv) {
-                            const kmvLen = kmv.length;
-                            for (let i = 0; i < kmvLen; i++) {
-                                const element = kmv[i];
-                                this.kmvData.push(element.riskValue);
-                                this.kmvDate.push(element.date);
+                    this.$Message.destroy();
+                    if (response.status === 200) {
+                        const flag = response.data.status;
+                        if (flag == '0') {
+                            this.baseInfo = response.data.data;
+                            const kmv = response.data.data.kmvModelHistoryList;
+                            const mf = response.data.data.mfModelHistoryList;
+                            if (kmv) {
+                                const kmvLen = kmv.length;
+                                for (let i = 0; i < kmvLen; i++) {
+                                    const element = kmv[i];
+                                    this.kmvData.push(element.riskValue);
+                                    this.kmvDate.push(element.date);
+                                }
                             }
-                        }
-                        if (mf) {
-                            const mfLen = mf.length;
-                            for (let i = 0; i < mfLen; i++) {
-                                const element = mf[i];
-                                this.mfData.push(element.riskValue);
-                                this.mfDate.push(element.date);
+                            if (mf) {
+                                const mfLen = mf.length;
+                                for (let i = 0; i < mfLen; i++) {
+                                    const element = mf[i];
+                                    this.mfData.push(element.riskValue);
+                                    this.mfDate.push(element.date);
+                                }
                             }
+                            this.drawMultipleFactors(this.mfData, this.mfDate);
+                            this.drawDynamic(this.kmvData, this.kmvDate);
+                        }else{
+                            this.$Message.error({
+                                content: '操作异常！',
+                                duration: 3
+                            });
                         }
-                        this.drawMultipleFactors(this.kmvData, this.kmvDate);
-                        this.drawDynamic(this.mfData, this.mfDate);
-                    }else{
-                        this.$Message.error({
-                            content: '操作异常！',
-                            duration: 3
-                        });
-                    }
+                    } 
                 })
                 .catch((err) => {
                     this.$Message.destroy();
+                    this.baseInfo = [];
                     console.log(err)
                     this.$Message.error({
                         content: '数据请求失败！',
@@ -194,20 +197,7 @@ export default {
         drawMultipleFactors(data, date) {
             // 基于准备好的dom，初始化echarts实例
             var myChart = this.$echarts.init(document.getElementById('multiple-factors'));
-            // 初始化数据源
-            // var base = +new Date(1968, 9, 3);
-            // var oneDay = 24 * 3600 * 1000;
-            // var date = [];
-
-            // var data = [Math.random() * 300];
-
-            // for (var i = 1; i < 20000; i++) {
-            //     var now = new Date(base += oneDay);
-            //     date.push([now.getFullYear(), now.getMonth() + 1, now.getDate()].join('/'));
-            //     data.push(Math.round((Math.random() - 0.5) * 20 + data[i - 1]));
-            // }
-
-            // 绘制图表
+            // 绘制多因子模型图表
             myChart.setOption({
                 tooltip: {
                     trigger: 'axis', //坐标轴触发，主要在柱状图，折线图等会使用类目轴的图表中使用
@@ -217,7 +207,7 @@ export default {
                 },
                 title: {
                     // left: 'center',
-                    // text: '大数据量面积图',
+                    // text: '违约概率',
                 },
                 toolbox: {
                     feature: {
@@ -235,7 +225,11 @@ export default {
                 },
                 yAxis: {
                     type: 'value',
-                    boundaryGap: [0, '100%']
+                    boundaryGap: [0, '100%'],
+                    name: '违约概率(%)',
+                    max: function(value) {
+                        return 100;
+                    }
                 },
                 dataZoom: [{
                     type: 'inside',
@@ -256,7 +250,7 @@ export default {
                 }],
                 series: [
                     {
-                        name:'模拟数据',
+                        name:'违约概率',
                         type:'line',
                         smooth:true,
                         symbol: 'none',
@@ -281,20 +275,8 @@ export default {
         drawDynamic(data, date) {
             // 基于准备好的dom，初始化echarts实例
             var myChart = this.$echarts.init(document.getElementById('dynamic'));
-            // 初始化数据源
-            // var base = +new Date(1968, 9, 3);
-            // var oneDay = 24 * 3600 * 1000;
-            // var date = [];
 
-            // var data = [Math.random() * 300];
-
-            // for (var i = 1; i < 20000; i++) {
-            //     var now = new Date(base += oneDay);
-            //     date.push([now.getFullYear(), now.getMonth() + 1, now.getDate()].join('/'));
-            //     data.push(Math.round((Math.random() - 0.5) * 20 + data[i - 1]));
-            // }
-
-            // 绘制图表
+            // 绘制动态模型图表
             myChart.setOption({
                 tooltip: {
                     trigger: 'axis', //坐标轴触发，主要在柱状图，折线图等会使用类目轴的图表中使用
@@ -304,7 +286,7 @@ export default {
                 },
                 title: {
                     // left: 'center',
-                    // text: '大数据量面积图',
+                    // text: '收益率',
                 },
                 toolbox: {
                     feature: {
@@ -322,7 +304,9 @@ export default {
                 },
                 yAxis: {
                     type: 'value',
-                    boundaryGap: [0, '100%']
+                    boundaryGap: [0, '100%'],
+                    name: '违约概率(%)',
+                    max: 100
                 },
                 dataZoom: [{
                     type: 'inside',
@@ -343,7 +327,7 @@ export default {
                 }],
                 series: [
                     {
-                        name:'模拟数据',
+                        name:'动态数据',
                         type:'line',
                         smooth:true,
                         symbol: 'none',

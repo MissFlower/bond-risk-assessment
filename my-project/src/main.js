@@ -15,13 +15,24 @@ Vue.prototype.$echarts = echarts;
 Vue.config.productionTip = false;
 
 import { post, fetch, patch, put } from './utils/http';
-console.log(process.env.NODE_ENV)
 //定义全局变量
 Vue.prototype.$post = post;
 Vue.prototype.$fetch = fetch;
 Vue.prototype.$patch = patch;
 Vue.prototype.$put = put;
 
+// 路由跳转滚动条置顶
+router.afterEach((to,from,next) => {
+	window.scrollTo(0,0);
+});
+// 路由跳转改变页面title
+router.beforeEach((to, from, next) => {
+	/* 路由发生变化修改页面title */
+	if (to.meta.title) {
+	  	document.title = to.meta.title
+	}
+	next()
+})
 /* eslint-disable no-new */
 new Vue({
 	el: '#app',

@@ -37,8 +37,8 @@
                         <span class="fl tk-reset-btn tc fs14" @click="getReset">重置</span>
                         <div class="fl tk-model-radio">
                             <RadioGroup v-model="model" @on-change="modelChange">
-                                <Radio label="多因子"></Radio>
-                                <Radio label="动态违约率"></Radio>
+                                <Radio label="多因子" :disabled="radio1"></Radio>
+                                <Radio label="动态违约率" :disabled="radio2"></Radio>
                             </RadioGroup>
                         </div>
                         <div class="fl tk-model-sort clearfix">
@@ -51,16 +51,16 @@
                     </div>
                 </div>
                 <div class="tk-content-right-box clearfix">
-                        <div class="tk-mode-list fl" v-for="(item, index) in modeListDatas" :key="index" @click="getRiskInfo(item.secName, item.kmvModelRisk, item.mfModeRisk, item.rateFormer)">
+                        <div class="tk-mode-list fl" v-for="(item, index) in modeListDatas" :key="index" @click="getRiskInfo(item.secName, item.mfModeRisk, item.kmvModelRisk, item.rateFormer)">
                             <p class="tk-mode-list-name tc fs16">{{ item.secName }}</p>
                             <div class="tk-value-risk-box tc">
                                 <div class="tk-multiple-factors">
                                     <p class="fs12 tk-model-type-name">多因子违约率</p>
-                                    <span class="fs20 tk-model-type-value show">{{ item.kmvModelRisk }}</span>
+                                    <span class="fs20 tk-model-type-value show">{{ item.mfModeRisk }}%</span>
                                 </div>
                                 <div class="tk-dynamic">
                                     <p class="fs12 tk-model-type-name">动态违约率</p>
-                                    <span class="fs20 tk-model-type-value show">{{ item.mfModeRisk }}</span>
+                                    <span class="fs20 tk-model-type-value show">{{ item.kmvModelRisk }}%</span>
                                 </div>
                                 <em class="tk-dynamic-vertical"></em>
                             </div>
@@ -86,29 +86,31 @@ export default {
     name: "TkSecurityIndex",
     data() {
         return {
-            currentGradeIndex: 0,
-            currentGradeName: 'AAA',
-            companyName: '中诚信国际信用评级有限责任公司',
-            companyLists: ['泰康','中诚信国际信用评级有限责任公司','联合信用评级有限公司','中诚信证券评估有限公司','大公国际资信评估有限公司','中证鹏元资信评估股份有限公司','上海新世纪资信评估投资服务有限公司','东方金诚国际信用评估有限公司','远东资信评估有限公司','标准普尔评级服务公司'],
-            modeData: ['动态评估','多因子'],
-            gradeData: ['AAA', 'AA', 'A', 'BBB', 'BB', 'B', 'CCC', 'CC', 'C', 'D'], 
+            currentGradeIndex: 0, // 默认评级下标
+            currentGradeName: 'AAA', // 默认评级值
+            companyName: '泰康', // 默认评级公司名称
+            companyLists: ['泰康','联合信用评级有限公司','中诚信证券评估有限公司','大公国际资信评估有限公司','中证鹏元资信评估股份有限公司','上海新世纪资信评估投资服务有限公司','东方金诚国际信用评估有限公司','远东资信评估有限公司','标准普尔评级服务公司'], // 评级公司列表
+            modeData: ['动态评估','多因子'], // 模型类型列表
+            gradeData: ['AAA', 'AA', 'A', 'BBB', 'BB', 'B', 'CCC', 'CC', 'C'],  // 评级列表
             modeListDatas: [], // 后台返回数据
             total: 0, //总条数
             value: '', //搜索框
-            theme: 'light',
+            theme: 'light', // 评级公司组件主题
             model: '多因子', // 默认模型（前端显示）
-            pageId: 'tkPage',
-            isActive: true, // 评级样式选择控制
+            pageId: 'tkPage', // 自定义跳转按钮的id名称
+            isActive: false, // 评级样式选择控制
             searchFlag: false, //控制搜索框下面list列表显隐
             searchResults: [],//存储页面初始化接收后台所有的债券名称
             screenResults: [], //存储根据用户输入筛选过的债券名,
-            order: '升序', // 降序升序 默认升序
+            order: 'desc', // 降序升序 默认升序
             pageNum: '1', // 初始化页码
             pageSize: '12', // 初始化每页给12条数据
-            totalPage: 2, // 总页数
+            totalPage: 1, // 总页数
             repeatClickFlag: false, // 重复点击标记
             currentPage: 1, // 当前页码
-            orderBy: 'kmv', // 默认模型
+            orderBy: 'mf', // 默认模型 kmv为动态 mf为多因子
+            radio1: false,
+            radio2: false,
        };
     },
     components: {
@@ -128,6 +130,14 @@ export default {
                 content: '数据请求发送中...',
                 duration: 0
             });
+            const index = that.model;
+            if (index == '多因子') {
+                that.radio1 = false;
+                that.radio2 = true;
+            }else if(index == '动态违约率') {
+                that.radio1 = true;
+                that.radio1 = false;
+            }
             let data = {
                 orderBy: that.orderBy, //模型
                 order: that.order, // 升序、降序
@@ -142,16 +152,28 @@ export default {
                     if (response.data.status == '0') {
                         // console.log(response)
                         let res = response.data.data;
-                        that.modeListDatas = res.list;
-                        that.total = Number(res.page.totalResult);
-                        that.totalPage = res.page.totalPage;
-                        that.repeatClickFlag = true;
+                        if (res) {
+                            that.modeListDatas = res.list;
+                            that.total = Number(res.page.totalResult);
+                            that.totalPage = res.page.totalPage;
+                        }else{
+                            that.modeListDatas = [];
+                            that.total = 0;
+                            that.totalPage = 0;
+                            that.$Message.success({
+                                content: '您选择的参数暂无数据！',
+                                duration: 3
+                            });
+                        }
                     }else{
                         that.$Message.error({
                             content: '请求异常！',
                             duration: 3
                         });
                     }
+                    that.radio1 = false;
+                    that.radio2 = false;
+                    that.repeatClickFlag = true;
                 })
                 .catch((err) => {
                     that.$Message.destroy();
@@ -160,6 +182,8 @@ export default {
                         content: '数据请求失败！',
                         duration: 3
                     });
+                    that.radio1 = false;
+                    that.radio2 = false;
                     that.repeatClickFlag = true;
                 })
         },
@@ -168,11 +192,13 @@ export default {
             let data = {};
             that.$post('cbond_model/cbonds/queryAllCbondName', data)
                 .then((response) => {
-                    if (response.data.status == '0') {
-                        // console.log(response)
-                        let res = response.data.data;
-                        that.searchResults = res;
-                        // console.log(res)
+                    if (response.status === 200) {
+                        if (response.data.status == '0') {
+                            // console.log(response)
+                            let res = response.data.data;
+                            that.searchResults = res;
+                            // console.log(res)
+                        }
                     }
                 })
                 .catch((err) => {
@@ -186,11 +212,17 @@ export default {
                 return false;
             }
             if (that.repeatClickFlag) {
+                that.repeatClickFlag = false;
                 that.currentPage = 1;
                 that.currentGradeIndex = index;
                 that.currentGradeName = gradeNameList;
                 console.log(gradeNameList)
                 that.getData()
+            }else{
+                that.$Message.warning({
+                    content: '数据请求中,请勿频繁点击！',
+                    duration: 3
+                });
             }
         },
         getCompany(index) {
@@ -201,60 +233,90 @@ export default {
             }
             if (that.repeatClickFlag) {
                 console.log(index)
+                that.repeatClickFlag = false;
                 that.currentPage = 1;
                 that.companyName = index;
                 that.getData()
+            }else{
+                that.$Message.warning({
+                    content: '数据请求中,请勿频繁点击！',
+                    duration: 3
+                });
             }
         },
         changePage(index) {
             // 页码改变
             const that = this;
             if (that.repeatClickFlag) {
-                console.log(index)
+                that.repeatClickFlag = false;
                 that.currentPage = index;
                 that.getData()
+            }else{
+                that.$Message.warning({
+                    content: '数据请求中,请勿频繁点击！',
+                    duration: 3
+                });
             }
         },
         changePageSize(index) {
             // 每页页面获取数量
             const that = this;
             if (that.repeatClickFlag) {
+                that.repeatClickFlag = false;
                 that.currentPage = 1;
-                // console.log(index, this.pageNum)
                 that.pageSize = index;
+                that.getData()
             }
         },
         getSearch() {
             // 搜索
             const that = this;
             console.log(that.value)
-            if (that.value) {
-                that.$Message.loading({
-                    content: '正在查询...',
-                    duration: 0
-                });
-                let data = {
-                    secName: that.value
-                }
-                that.$post('cbond_model/cbonds/queryCbondByName', data)
-                    .then((response) => {
-                        if (response.data.status == '0') {
+            if (that.repeatClickFlag) {
+                that.repeatClickFlag = false;
+                if (that.value) {
+                    that.$Message.loading({
+                        content: '正在查询...',
+                        duration: 0
+                    });
+                    let data = {
+                        secName: that.value
+                    }
+                    that.$post('cbond_model/cbonds/queryCbondByName', data)
+                        .then((response) => {
+                            that.repeatClickFlag = true;
                             that.$Message.destroy();
-                            // console.log(response)
-                            let res = response.data.data;
-                            that.modeListDatas = [];
-                            that.modeListDatas.push(res);
-                            that.totalPage = 1;
-                            // console.log(res)
-                        }
-                    })
-                    .catch((err) => {
-                        that.$Message.destroy();
-                        console.log(err)
-                    })
+                            if (response.status === 200) {
+                                if (response.data.status == '0') {
+                                    that.$Message.destroy();
+                                    // console.log(response)
+                                    let res = response.data.data;
+                                    that.modeListDatas = [];
+                                    that.modeListDatas.push(res);
+                                    that.totalPage = 1;
+                                    // console.log(res)
+                                }
+                            }else{
+                                that.$Message.error({
+                                    content: '数据查询失败！',
+                                    duration: 3
+                                });
+                            }
+                        })
+                        .catch((err) => {
+                            that.repeatClickFlag = true;
+                            that.$Message.destroy();
+                            console.log(err)
+                        })
+                }else{
+                    that.$Message.error({
+                        content: '请输入您要查询的债券名称！',
+                        duration: 3
+                    });
+                }
             }else{
-                that.$Message.error({
-                    content: '求输入您要查询的债券名称！',
+                that.$Message.warning({
+                    content: '数据请求中,请稍候查询！',
                     duration: 3
                 });
             }
@@ -263,14 +325,14 @@ export default {
             // 重置
             this.value = '';
         },
-        getRiskInfo(name, kmv, mf, grade) {
+        getRiskInfo(name, mf, kmv, grade) {
             // 点击跳转
             this.$router.push({
                 path: 'riskInfo',//跳转路由
                 query:{//参数对象
                     name: name,
-                    kmv: kmv,
                     mf: mf,
+                    kmv: kmv,
                     grade: grade
                 }
             })
@@ -279,10 +341,11 @@ export default {
             // 升序排列
             const that = this;
             if (that.repeatClickFlag) {
+                that.repeatClickFlag = false;
                 that.currentPage = 1;
                 that.isActive = true;
                 console.log('升序')
-                that.order = '升序';
+                that.order = 'asc';
                 that.getData()
             }
         },
@@ -290,25 +353,36 @@ export default {
             // 降序排列
             const that = this;
             if (that.repeatClickFlag) {
+                that.repeatClickFlag = false;
                 that.currentPage = 1;
                 that.isActive = false;
                 console.log('降序')
-                that.order = '降序';
+                that.order = 'desc';
                 that.getData()
+            }else{
+                that.$Message.warning({
+                    content: '数据请求中,请勿频繁点击！',
+                    duration: 3
+                });
             }
         },
         modelChange(index) {
             // 模型改变
             const that = this;
             if (that.repeatClickFlag) {
-                console.log(index)
+                that.repeatClickFlag = false;
                 that.currentPage = 1;
                 if (index == '多因子') {
-                    that.orderBy = 'kmv'
-                }else if(index == '动态违约率') {
                     that.orderBy = 'mf'
+                }else if(index == '动态违约率') {
+                    that.orderBy = 'kmv'
                 }
                 this.getData()
+            }else{
+                that.$Message.warning({
+                    content: '数据请求中,请勿频繁点击！',
+                    duration: 3
+                });
             }
         },
         getDataChange(event) {

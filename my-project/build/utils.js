@@ -47,6 +47,7 @@ exports.cssLoaders = function (options) {
     if (options.extract) {
       return ExtractTextPlugin.extract({
         use: loaders,
+        publicPath: '../../', // by DoveyLovey、Cora  这里是为iview字体图标库访问不到加载的
         fallback: 'vue-style-loader',
       })
     } else {

@@ -47,7 +47,8 @@ const devWebpackConfig = merge(baseWebpackConfig, {
   plugins: [
     new webpack.DefinePlugin({
       'process.env': require('../config/dev.env'),
-      'BASE_URL': "'http://192.168.43.189:8080/'"
+      'BASE_URL': "'http://192.168.43.49:8080/'", // 韩锦
+      // 'BASE_URL': "'http://192.168.43.189:8080/'" // 正文
     }),
     new webpack.HotModuleReplacementPlugin(),
     new webpack.NamedModulesPlugin(), // HMR shows correct file names in console on update.
